@@ -6,22 +6,20 @@ client = MongoClient("mongodb://localhost:27017/")
 db = client.sampleTree
 songs = db.songs
 
-def scrape_song(song_url):
+def scrape_and_save_song(song_url):
     response = requests.get(song_url)
     soup = BeautifulSoup(response.content, 'html.parser')
 
-    # Parse song info (adapt based on WhoSampled structure)
+    # Parse the song data here
     title = soup.find("h1").text.strip()
     artist = soup.find("h2").text.strip()
-    # Fetch samples and sampled_by data...
 
-    # Save to MongoDB
     song_data = {
         "title": title,
         "artist": artist,
-        # Add more song data...
+        # Add more parsed data here, like samples and sampled_by
     }
-    songs.insert_one(song_data)
 
-# Example usage
-scrape_song("https://www.whosampled.com/SomeSong/")
+    # Save to MongoDB
+    songs.insert_one(song_data)
+    return song_data
