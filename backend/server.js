@@ -1,85 +1,57 @@
 const express = require('express');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const dotenv = require('dotenv');
-const path = require('path');
-const fs = require('fs');
-
-// Debug: Print current directory and file existence
-const envPath = path.resolve(__dirname, '../.env');
-console.log('Looking for .env file at:', envPath);
-console.log('.env file exists:', fs.existsSync(envPath));
-
-// Try to load environment variables
-try {
-    const result = dotenv.config({ path: envPath });
-    if (result.error) {
-        throw result.error;
-    }
-    console.log('Environment variables loaded successfully');
-} catch (error) {
-    console.error('Failed to load .env file:', error);
-    
-    // Fallback: Try to set environment variables directly
-    if (!process.env.MONGODB_URI) {
-        process.env.MONGODB_URI = 'mongodb+srv://viraajsingh:Swager88@sample-tree.skx99.mongodb.net/?retryWrites=true&w=majority&appName=Sample-Tree';
-        console.log('Set MONGODB_URI directly as fallback');
-    }
-}
-
 const songRoutes = require('./routes/songRoutes');
+
+dotenv.config({ path: 'backend/.env' }); // Load environment variables
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// MongoDB Configuration
-const uri = process.env.MONGODB_URI;
-if (!uri) {
-    console.error('ERROR: MongoDB URI is not defined in environment variables');
-    process.exit(1);
-}
+// MongoDB URI from the .env file
+const uri = process.env.MONGO_URI;
 
+// Create a MongoClient with the MongoClientOptions object
 const client = new MongoClient(uri, {
     serverApi: {
         version: ServerApiVersion.v1,
         strict: true,
         deprecationErrors: true,
     },
-    maxPoolSize: 50,
-    wtimeoutMS: 2500,
 });
-
-// Middleware
-app.use(express.json());
 
 async function connectToDatabase() {
     try {
+        // Connect the client to the server
         await client.connect();
+        
+        // Ping the database to confirm connection
         await client.db("admin").command({ ping: 1 });
-        console.log("✅ MongoDB connection successful");
-        
+        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+
+        // Pass the MongoDB client to routes or other parts of the app
         app.locals.dbClient = client;
-        app.use('/api', songRoutes);
-        
+
+        // Start the Express server only after a successful MongoDB connection
         app.listen(PORT, () => {
-            console.log(`🚀 Server running on http://localhost:${PORT}`);
+            console.log(`Server is running on http://localhost:${PORT}`);
         });
-    } catch (error) {
-        console.error('❌ MongoDB connection error:', error);
-        process.exit(1);
+
+    } catch (err) {
+        console.error('Failed to connect to MongoDB:', err);
+        process.exit(1); // Exit if there’s a connection error
     }
 }
 
-// Initialize the application
-connectToDatabase().catch(console.error);
+// Call the function to connect to the database
+connectToDatabase();
 
-// Graceful shutdown
+app.use(express.json());
+app.use('/api', songRoutes);
+
+// Optional: Close the MongoDB client when the process ends
 process.on('SIGINT', async () => {
-    try {
-        await client.close();
-        console.log('MongoDB connection closed.');
-        process.exit(0);
-    } catch (error) {
-        console.error('Error during shutdown:', error);
-        process.exit(1);
-    }
+    await client.close();
+    console.log('MongoDB connection closed');
+    process.exit(0);
 });

@@ -2,6 +2,7 @@ import os
 import time
 import random
 import sys
+import certifi
 from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 from bs4 import BeautifulSoup
@@ -22,7 +23,17 @@ if not MONGO_URI:
 # Initialize MongoDB Client
 def init_mongo():
     try:
-        client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)  # 5 seconds timeout
+        # Use TLS/SSL configuration options
+        client = MongoClient(
+            MONGO_URI,
+            serverSelectionTimeoutMS=5000,
+            tls=True,
+            tlsCAFile=certifi.where(),
+            connectTimeoutMS=20000,
+            socketTimeoutMS=20000,
+            maxPoolSize=50,
+            retryWrites=True
+        )
         # Attempt to retrieve server info to trigger connection
         client.server_info()
         print("MongoDB connection established.")
@@ -311,7 +322,7 @@ def scrape_song(artist, song_title):
 # Example usage
 if __name__ == "__main__":
     artist = "Drake"
-    song_title = "Sticky"
+    song_title = "Hotline Bling"
     scraped_data = scrape_song(artist, song_title)
     if scraped_data:
         print("Scraping completed successfully.")
