@@ -321,8 +321,8 @@ def scrape_song(artist, song_title):
 
 # Example usage
 if __name__ == "__main__":
-    artist = "Drake"
-    song_title = "Hotline Bling"
+    artist = "Move Ya Body"
+    song_title = "Nina Sky"
     scraped_data = scrape_song(artist, song_title)
     if scraped_data:
         print("Scraping completed successfully.")

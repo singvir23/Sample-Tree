@@ -3,7 +3,7 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 const dotenv = require('dotenv');
 const songRoutes = require('./routes/songRoutes');
 
-dotenv.config({ path: 'backend/.env' }); // Load environment variables
+dotenv.config({ path: '/Users/viraajsingh/Desktop/Sample-Tree/backend/.env' }); // Load environment variables
 
 const app = express();
 const PORT = process.env.PORT || 3000;
